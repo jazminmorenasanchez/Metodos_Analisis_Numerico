@@ -4,31 +4,54 @@ using namespace std;
 
 // Función f(x) = e^x * cos(x)
 double f(double x) {
-    return exp(x)*cos(x);
+    return exp(x) * cos(x);
 }
 
-// Derivada progresiva en x0
+// Derivada progresiva en x0 con 3 puntos
 double derivada_progresiva(double x0, double h) {
     return (-3 * f(x0) + 4 * f(x0 + h) - f(x0 + 2 * h)) / (2 * h);
 }
 
-// Derivada centrada en puntos intermedios
+// Derivada centrada en puntos intermedios con 3 puntos
 double derivada_centrada(double x0, double h) {
     return (f(x0 + h) - f(x0 - h)) / (2 * h);
 }
 
-// Derivada regresiva en el último punto
+// Derivada regresiva en el último punto con 3 puntos
 double derivada_regresiva(double x0, double h) {
     return (3 * f(x0) - 4 * f(x0 - h) + f(x0 - 2 * h)) / (2 * h);
 }
 
+void mostrarFormulas(double h, double a, double b) {
+    cout << "Formulas:\n";
+    cout << "Ecuacion progresiva --> f'(x) = [-3 * f(x0) + 4 * f(x0 + h) - f(x0 + 2h)] / (2 * h) + Oh^2\n";
+    cout << "Ecuacion centrada --> f'(x) = [f(x0 - 2h) - 4 * f(x0 - h) + 3 * f(x0)] / (2 * h) + Oh^2\n";
+    cout << "Ecuacion regresiva --> f'(x) = [f(x0 + h) - f(x0 - h) ] / (2 * h) + Oh^2\n";
+    cout << endl;
+    cout << "Intervalo: [" << a <<" ; "<< b <<"]"<<endl;
+    cout << "Valor de h = " << h << endl;
+}
+
 int main() {
-    // Valores iniciales
-    double h = 0.1;
-    double x[] = { 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7}; // Puntos donde queremos calcular la derivada
-    int n = sizeof(x) / sizeof(x[0]); // Número de puntos
+    // Pedimos los extremos del intervalo y el valor de h
+    double a, b, h;
+    a = 0;
+    b = 0.7;
+    h = 0.1;
+
+    // Calculamos la cantidad de puntos en el intervalo
+    int n = (b - a) / h + 1;
+    double x[n];  // Array para almacenar los puntos de x
+
+    // Generamos los puntos de x
+    for (int i = 0; i < n; i++) {
+        x[i] = a + i * h;
+    }
+
+    mostrarFormulas(h,a,b);
     
-    cout << "Xi\tf(Xi)\t\tf'(Xi)\t\tMetodo" << endl;
+    // Imprimimos los resultados
+    cout << "\nXi\tf(Xi)\t\tf'(Xi)\t\tMetodo" << endl;
     for (int i = 0; i < n; i++) {
         double derivada;
         if (i == 0) {
@@ -45,6 +68,6 @@ int main() {
             cout << x[i] << "\t" << f(x[i]) << "\t\t" << derivada << "\t\tEcuacion centrada" << endl;
         }
     }
-    
+
     return 0;
 }
