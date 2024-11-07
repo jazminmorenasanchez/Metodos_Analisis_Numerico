@@ -19,8 +19,8 @@ double derivada_regresiva(double y0, double y1, double y2, double h) {
 
 int main() {
     // Tabla de valores de x y y (dados por el usuario)
-    vector<double> x = {0, 0.5, 1, 1.5, 2};  // Valores de x
-    vector<double> y = {0, 0.4207, 0.4546, 0.0706, -0.3784};  // Valores correspondientes de y
+    vector<double> x = {0, -0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9};  // Valores de x
+    vector<double> y = {0, -0.9, -0.16, -0.22, -0.26, -0.3, -0.32, -0.34, -0.35, -0.36};  // Valores correspondientes de y
 
     int n = x.size();  // Número de puntos
     double h = x[1] - x[0];  // Suponemos que h es constante (diferencia entre puntos de x)

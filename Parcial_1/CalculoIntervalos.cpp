@@ -5,7 +5,7 @@
 using namespace std;
 
 double f(double x){
-    return (-x)/pow(M_E,x);
+    return exp(-x)-x;
 }
 
 #define INTERVALOS 10

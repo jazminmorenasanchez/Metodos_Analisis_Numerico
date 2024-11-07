@@ -39,9 +39,9 @@ void metodoRK2(std::function<double(double, double)> func, double x0, double y0,
 
 int main() {
     double x0 = 0;     // Valor inicial de x
-    double y0 = 2;     // Condición inicial y(0) = 2
-    double h = 0.1;    // Tamaño del paso
-    double xFinal = 4; // Límite superior para x
+    double y0 = 0.3333;     // Condición inicial y(0) = 2
+    double h = 0.01;    // Tamaño del paso
+    double xFinal = 2; // Límite superior para x
 
     metodoRK2(f, x0, y0, h, xFinal);
 

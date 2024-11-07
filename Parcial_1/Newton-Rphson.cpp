@@ -1,103 +1,95 @@
 #include <iostream>
 #include <cmath>
+#include <iomanip>
 #include <limits>
-#include <stdexcept>
 
 using namespace std;
 
-struct NewtonRaphsonParams {
-    double x0;          // Valor inicial
-    double tol;        // Tolerancia
-    int maxIter;       // Máximo número de iteraciones
-};
-
-// Definimos la función f(x)
+// Define la funcion f(x) para la cual se quiere encontrar la raiz
 double f(double x) {
-    return (1 + x) / pow(M_E, x);
+    return exp(-x)-x;  // Cambia esta funcion segun el problema que desees resolver
 }
 
-// Definimos la derivada f'(x)
+// Define la derivada de f(x), es decir, f'(x)
 double f_prime(double x) {
-    return (-x) / pow(M_E, x);
+    return -exp(-x)-1;  // Cambia esta derivada segun la funcion f(x) que utilices
 }
 
-// Función para verificar si un valor es infinito o demasiado grande
-bool is_value_invalid(double value) {
-    return isinf(value) || fabs(value) > numeric_limits<double>::max();
-}
-
-// Función principal de Newton-Raphson
-double newton_raphson(NewtonRaphsonParams params) {
-    double x0 = params.x0;
-    double tol = params.tol;
-    int maxIter = params.maxIter;
-    double x1;
+// Metodo de Newton-Raphson
+void metodoNewtonRaphson(double x0, double tol, int max_iter) {
     int iter = 0;
+    double x1;
 
-    // Validar entradas
-    if (tol <= 0) {
-        throw invalid_argument("La tolerancia debe ser mayor a 0.");
+    cout << "Iteracion\t" << "x_n\t\t" << "f(x_n)\t\t" << "Error\n";
+    cout << "----------------------------------------------------------\n";
+    
+    while (iter < max_iter) {
+        double fx = f(x0);
+        double fx_prime = f_prime(x0);
+
+        if (fabs(fx_prime) < 1e-10) {  // Evita division por cero
+            cout << "La derivada es muy pequeña en x = " << x0 << ". Metodo fallido.\n";
+            return;
+        }
+
+        x1 = x0 - fx / fx_prime;  // Formula de Newton-Raphson
+        double error = fabs(x1 - x0);  // Calcula el error |x_(n+1) - x_n|
+
+        // Muestra la iteracion actual, x_n, f(x_n) y el error
+        cout << iter + 1 << "\t\t" << x0 << "\t\t" << fx << "\t\t" << error << "\n";
+
+        if (error < tol) {  // Si el error es menor que la tolerancia, se ha convergido
+            cout << "\nSolucion encontrada: x = " << x1 << " despues de " << iter + 1 << " iteraciones.\n";
+            return;
+        }
+
+        x0 = x1;  // Actualiza x0 para la siguiente iteracion
+        iter++;
     }
 
-    if (maxIter <= 0) {
-        throw invalid_argument("El número máximo de iteraciones debe ser mayor a 0.");
+    cout << "\nNo se alcanzo la convergencia despues de " << max_iter << " iteraciones.\n";
+}
+
+// Funcion para obtener un numero en punto flotante de entrada del usuario
+double obtenerNumero(const string& mensaje) {
+    double valor;
+    while (true) {
+        cout << mensaje;
+        cin >> valor;
+        if (cin.fail()) {  // Si hubo un error en la entrada
+            cin.clear();   // Limpia el estado de error
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');  // Descarta la entrada incorrecta
+            cout << "Entrada invalida. Por favor, introduce un numero.\n";
+        } else {
+            return valor;
+        }
     }
+}
 
-    cout << "Iniciando el metodo de Newton-Raphson con los siguientes valores:" << endl;
-    cout << "Valor inicial (x0): " << x0 << endl;
-    cout << "Tolerancia (epsilon): " << tol << endl;
-    cout << "Numero maximo de iteraciones: " << maxIter << endl;
-
-    while (iter < maxIter) {
-        double derivada = f_prime(x0);
-        int adjustmentAttempts = 0; // Contador para intentos de ajuste
-
-        // Comprobar si la derivada es cercana a cero
-        while (fabs(derivada) < numeric_limits<double>::epsilon() && adjustmentAttempts < 10) {
-            cout << "La derivada es cercana a cero en x = " << x0 << ". Ajustando x0 ligeramente." << endl;
-            x0 += 0.1;  // Ajuste ligero
-            derivada = f_prime(x0);
-            adjustmentAttempts++;
+// Funcion para obtener un numero entero de entrada del usuario
+int obtenerEntero(const string& mensaje) {
+    int valor;
+    while (true) {
+        cout << mensaje;
+        cin >> valor;
+        if (cin.fail() || valor <= 0) {  // Verifica que sea un numero entero positivo
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Entrada invalida. Por favor, introduce un numero entero positivo.\n";
+        } else {
+            return valor;
         }
-
-        // Si aún es cercana a cero después de 10 intentos, salimos del bucle
-        if (adjustmentAttempts >= 10) {
-            throw runtime_error("No se pudo encontrar una raíz, derivada cercana a cero repetidamente.");
-        }
-
-        // Validar que los valores de f(x0) y derivada no sean infinitos o muy grandes
-        if (is_value_invalid(f(x0)) || is_value_invalid(derivada)) {
-            throw runtime_error("Error: Se encontraron valores extremadamente grandes o infinitos en x = " + to_string(x0));
-        }
-
-        x1 = x0 - f(x0) / derivada;  // Aplicamos la fórmula de Newton-Raphson
-        iter++;                       // Incrementamos el contador de iteraciones
-
-        // Verificamos la convergencia
-        if (fabs(x1 - x0) < tol || fabs((x1 - x0) / x1) < tol) {
-            cout << "\n\nLa raiz aproximada es: " << x1 << endl;
-            cout << "Numero de iteraciones: " << iter << endl;
-            return x1;  // Salimos del programa si hemos convergido
-        }
-
-        x0 = x1;  // Actualizamos x0 para la siguiente iteración
     }
-
-    // Si llegamos aquí, significa que no hemos convergido
-    throw runtime_error("El método no converge en " + to_string(maxIter) + " iteraciones.");
 }
 
 int main() {
-    try {
-        // Configuración de parámetros
-        NewtonRaphsonParams params = {-1, 1e-3, 1000}; // Ejemplo de valores
+    // Solicita los valores de entrada de forma robusta
+    double x0 = obtenerNumero("Introduce el valor inicial x0: ");
+    double tol = obtenerNumero("Introduce la tolerancia (por ejemplo, 0.0001): ");
+    int max_iter = obtenerEntero("Introduce el numero maximo de iteraciones: ");
 
-        // Llamamos a la función de Newton-Raphson
-        newton_raphson(params);
-    } catch (const exception& e) {
-        cout << "Error: " << e.what() << endl;
-        return 1;
-    }
+    // Llama al metodo de Newton-Raphson
+    metodoNewtonRaphson(x0, tol, max_iter);
 
     return 0;
 }

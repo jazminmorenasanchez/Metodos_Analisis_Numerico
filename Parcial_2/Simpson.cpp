@@ -6,7 +6,7 @@ using namespace std;
 
 // Función a integrar
 double f(double x) {
-    return 8 + 5 * cos(x);
+    return 2 - ((x+2)/exp(x)) ;
 }
 
 // Método de Simpson 1/3
@@ -52,7 +52,7 @@ double metodoSimpson(double a, double b, int n) {
 
 int main() {
     double a = 0;
-    double b = M_PI; // Límite superior pi
+    double b = 5; // Límite superior pi
     int n = 10; // Debe ser par
 
     // Calcular la integral usando el método de Simpson

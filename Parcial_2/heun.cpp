@@ -5,7 +5,7 @@ using namespace std;
 
 // Definimos la función f(x, y) = dy/dx
 double f(double x, double y) {
-    return exp(0.8 * x) - 0.5 * y;
+     return (1/x)*(pow(y,2) + y);
 }
 
 // Implementación del método de Heun con una columna adicional para Euler
@@ -36,10 +36,10 @@ void metodoHeunConEuler(std::function<double(double, double)> func, double x0, d
 }
 
 int main() {
-    double x0 = 0;     // Valor inicial de x
+    double x0 = 1;     // Valor inicial de x
     double y0 = 2;     // Condición inicial y(0) = 2
-    double h = 0.1;    // Tamaño del paso
-    double xFinal = 4; // Límite superior para x
+    double h = 0.2;    // Tamaño del paso
+    double xFinal = 3; // Límite superior para x
 
     metodoHeunConEuler(f, x0, y0, h, xFinal);
 

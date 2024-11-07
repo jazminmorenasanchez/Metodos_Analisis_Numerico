@@ -56,8 +56,8 @@ string construirPolinomioLagrange(const vector<double>& X, const vector<double>&
 
 int main() {
     // Valores X e Y dados (se pueden modificar para cualquier número de puntos)
-    vector<double> X = {0, 1, 2, 3};  // Puntos X dados
-    vector<double> Y = {1.0, 2.7182, 7.3891, 20.0855};  // Puntos Y dados
+    vector<double> X = {-1, 0, 1, 2};  // Puntos X dados
+    vector<double> Y = {2.0, -0.7183, 0, 0.8964};  // Puntos Y dados
 
     // Construir y mostrar el polinomio de Lagrange
     string polinomio = construirPolinomioLagrange(X, Y);

@@ -1,84 +1,95 @@
 #include <iostream>
 #include <cmath>
-#include <stdexcept>  // Para manejo de excepciones
+#include <iomanip>
+#include <limits>
 
 using namespace std;
 
-// Definimos la función f(x)
+// Define la funcion f(x) para la cual se quiere encontrar la raiz
 double f(double x) {
-    return pow(M_E, -x)-x;
+    // Ejemplo de funcion: f(x) = x^2 - 4
+    return exp(-x)-x;  // Cambia esta funcion segun el problema que desees resolver
 }
 
-// Método de la secante
-double secante(double x0, double x1, double tol, int maxIter) {
+// Metodo de la secante
+void metodoSecante(double x0, double x1, double tol, int max_iter) {
     int iter = 0;
-    double x2;
+    double x2, error;
 
-    // Validaciones iniciales
-    if (tol <= 0) {
-        throw invalid_argument("Error: la tolerancia debe ser un valor positivo.");
-    }
-
-    if (maxIter <= 0) {
-        throw invalid_argument("Error: el numero maximo de iteraciones debe ser mayor que 0.");
-    }
-
-    if (fabs(f(x0) - f(x1)) < 1e-12) {
-        throw invalid_argument("Error: la diferencia entre f(x0) y f(x1) es demasiado pequeña. Esto puede provocar inestabilidad numerica.");
-    }
-
-    cout << "Iteracion\t x0\t\t x1\t\t f(x1)\t\t x2\t\t Error" << endl;
+    cout << "Iteracion\t" << "x_n\t\t" << "f(x_n)\t\t" << "Error\n";
+    cout << "----------------------------------------------------------\n";
     
-    // Método de la secante
-    while (iter < maxIter) {
-        // Calculamos el siguiente valor de x2 usando la fórmula de la secante
-        x2 = x1 - f(x1) * (x1 - x0) / (f(x1) - f(x0));
-        iter++;  // Incrementamos el contador de iteraciones
-        
-        // Mostramos el progreso de la iteración
-        cout << iter << "\t\t" << x0 << "\t\t" << x1 << "\t\t" << f(x1) << "\t\t" << x2 << "\t\t" << fabs(x2 - x1) << endl;
+    while (iter < max_iter) {
+        double fx0 = f(x0);
+        double fx1 = f(x1);
 
-        // Verificamos la convergencia basada en la diferencia de puntos y el valor de f(x2)
-        if (fabs(x2 - x1) < tol || fabs(f(x2)) < tol) {
-            cout << "\nLa raiz aproximada es: " << x2 << endl;
-            cout << "Numero de iteraciones: " << iter << endl;
-            return x2;
+        if (fabs(fx1 - fx0) < 1e-10) {  // Evita division por cero en la formula de la secante
+            cout << "La diferencia f(x_n) - f(x_(n-1)) es demasiado pequena. Metodo fallido.\n";
+            return;
         }
 
-        // Actualizamos x0 y x1 para la siguiente iteración
+        // Formula de la secante para obtener x_(n+1)
+        x2 = x1 - fx1 * (x1 - x0) / (fx1 - fx0);
+        error = fabs(x2 - x1);  // Calcula el error |x_(n+1) - x_n|
+
+        // Muestra la iteracion actual, x_n, f(x_n) y el error
+        cout << iter + 1 << "\t\t" << x1 << "\t\t" << fx1 << "\t\t" << error << "\n";
+
+        if (error < tol) {  // Si el error es menor que la tolerancia, se ha convergido
+            cout << "\nSolucion encontrada: x = " << x2 << " despues de " << iter + 1 << " iteraciones.\n";
+            return;
+        }
+
+        // Actualiza x0 y x1 para la siguiente iteracion
         x0 = x1;
         x1 = x2;
-
-        // Chequeo adicional para evitar que los valores de f(x0) y f(x1) sean muy cercanos y causen errores de división
-        if (fabs(f(x0) - f(x1)) < 1e-12) {
-            throw runtime_error("Error: los valores de f(x0) y f(x1) se están acercando demasiado, lo que puede provocar inestabilidad numérica.");
-        }
+        iter++;
     }
 
-    // Si no se logró convergencia dentro del número máximo de iteraciones, lanzamos excepción
-    throw runtime_error("El metodo no converge en el numero maximo de iteraciones.");
+    cout << "\nNo se alcanzo la convergencia despues de " << max_iter << " iteraciones.\n";
+}
+
+// Funcion para obtener un numero en punto flotante de entrada del usuario
+double obtenerNumero(const string& mensaje) {
+    double valor;
+    while (true) {
+        cout << mensaje;
+        cin >> valor;
+        if (cin.fail()) {  // Si hubo un error en la entrada
+            cin.clear();   // Limpia el estado de error
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');  // Descarta la entrada incorrecta
+            cout << "Entrada invalida. Por favor, introduce un numero.\n";
+        } else {
+            return valor;
+        }
+    }
+}
+
+// Funcion para obtener un numero entero de entrada del usuario
+int obtenerEntero(const string& mensaje) {
+    int valor;
+    while (true) {
+        cout << mensaje;
+        cin >> valor;
+        if (cin.fail() || valor <= 0) {  // Verifica que sea un numero entero positivo
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Entrada invalida. Por favor, introduce un numero entero positivo.\n";
+        } else {
+            return valor;
+        }
+    }
 }
 
 int main() {
-    double x0 = -1;       // Primer valor inicial x0
-    double x1 = 2;       // Segundo valor inicial x1
-    double tol = pow(10,-3);     // Tolerancia epsilon = 10^(-3)
-    int maxIter = 50;      // Número máximo de iteraciones
+    // Solicita los valores de entrada de forma robusta
+    double x0 = obtenerNumero("Introduce el valor inicial x0: ");
+    double x1 = obtenerNumero("Introduce el valor inicial x1: ");
+    double tol = obtenerNumero("Introduce la tolerancia (por ejemplo, 0.0001): ");
+    int max_iter = obtenerEntero("Introduce el numero maximo de iteraciones: ");
 
-    // Mostramos los valores iniciales
-    cout << "Iniciando el metodo de la secante con los siguientes valores:" << endl;
-    cout << "Primer valor inicial (x0): " << x0 << endl;
-    cout << "Segundo valor inicial (x1): " << x1 << endl;
-    cout << "Tolerancia (epsilon): " << tol << endl;
-    cout << "Numero maximo de iteraciones: " << maxIter << endl;
-
-    try {
-        // Llamamos al método de la secante
-        secante(x0, x1, tol, maxIter);
-    } catch (const exception& e) {
-        // Capturamos cualquier excepción y mostramos el mensaje de error
-        cout << "Error: " << e.what() << endl;
-    }
+    // Llama al metodo de la secante
+    metodoSecante(x0, x1, tol, max_iter);
 
     return 0;
 }
