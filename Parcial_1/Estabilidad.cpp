@@ -1,180 +1,145 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <iomanip>
+#include <limits>
 #include <stdexcept>
 
 using namespace std;
 
 typedef vector<vector<double>> Matrix;
-typedef vector<double> Vector;
 
-// Función para mostrar una matriz
-void printMatrix(const Matrix& mat) {
-    for (const auto& row : mat) {
-        for (double val : row) {
-            cout << val << "\t";
-        }
-        cout << endl;
-    }
-}
-
-// Función para mostrar un vector
-void printVector(const Vector& vec) {
-    for (double val : vec) {
-        cout << val << "\t";
-    }
-    cout << endl;
-}
-
-// Función para crear una matriz identidad de tamaño n
-Matrix identityMatrix(int n) {
-    Matrix I(n, vector<double>(n, 0.0));
-    for (int i = 0; i < n; i++) {
-        I[i][i] = 1.0;
-    }
-    return I;
-}
-
-// Función para calcular la inversa de una matriz usando el método de Gauss-Jordan
-Matrix inverseMatrix(const Matrix& A) {
-    int n = A.size();
-    Matrix augmentedMatrix(n, vector<double>(2 * n));
-
-    // Crear una matriz aumentada [A | I]
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            augmentedMatrix[i][j] = A[i][j];        // Parte A
-            augmentedMatrix[i][j + n] = (i == j) ? 1.0 : 0.0;  // Parte I
-        }
-    }
-
-    // Aplicar eliminación Gaussiana para convertir A en I y obtener A^-1
-    for (int i = 0; i < n; i++) {
-        // Verificar si el pivote es cero y buscar una fila para intercambiar
-        if (augmentedMatrix[i][i] == 0) {
-            bool swapped = false;
-            for (int k = i + 1; k < n; k++) {
-                if (augmentedMatrix[k][i] != 0) {
-                    swap(augmentedMatrix[i], augmentedMatrix[k]);
-                    swapped = true;
-                    break;
-                }
-            }
-            if (!swapped) {
-                throw runtime_error("La matriz no es invertible.");
-            }
-        }
-
-        // Hacer que el pivote sea 1 dividiendo toda la fila
-        double pivot = augmentedMatrix[i][i];
-        for (int j = 0; j < 2 * n; j++) {
-            augmentedMatrix[i][j] /= pivot;
-        }
-
-        // Hacer que todos los demás elementos de la columna sean cero
-        for (int k = 0; k < n; k++) {
-            if (k != i) {
-                double factor = augmentedMatrix[k][i];
-                for (int j = 0; j < 2 * n; j++) {
-                    augmentedMatrix[k][j] -= factor * augmentedMatrix[i][j];
-                }
-            }
-        }
-    }
-
-    // Extraer la inversa (parte derecha de la matriz aumentada)
-    Matrix inverse(n, vector<double>(n));
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            inverse[i][j] = augmentedMatrix[i][j + n];
-        }
-    }
-
-    return inverse;
-}
-
-// Función para multiplicar una matriz por un vector
-Vector multiplyMatrixVector(const Matrix& A, const Vector& b) {
-    int n = A.size();
-    Vector result(n, 0.0);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            result[i] += A[i][j] * b[j];
-        }
-    }
-    return result;
-}
-
-// Función para calcular la norma de un vector
-double vectorNorm(const Vector& v) {
-    double sum = 0.0;
-    for (double val : v) {
-        sum += val * val;
-    }
-    return sqrt(sum);
-}
-
-// Función para calcular la norma de una matriz
-double matrixNorm(const Matrix& A) {
+// Función para calcular la norma infinita de una matriz
+double infinityNorm(const Matrix& mat) {
     double maxSum = 0.0;
-    for (const auto& row : A) {
+    for (const auto& row : mat) {
         double rowSum = 0.0;
         for (double val : row) {
-            rowSum += fabs(val);
+            rowSum += abs(val);
         }
         maxSum = max(maxSum, rowSum);
     }
     return maxSum;
 }
 
-// Función para calcular el número de condición
-double conditionNumber(const Matrix& A) {
-    Matrix A_inv = inverseMatrix(A);
-    double normA = matrixNorm(A);
-    double normA_inv = matrixNorm(A_inv);
-    return normA * normA_inv;
+// Función para obtener la inversa de una matriz usando el método de Gauss-Jordan
+bool inverseMatrix(const Matrix& mat, Matrix& inverse) {
+    int n = mat.size();
+    inverse = Matrix(n, vector<double>(n, 0.0));
+
+    Matrix augmented(mat);
+
+    for (int i = 0; i < n; ++i) {
+        augmented[i].resize(2 * n);
+        augmented[i][i + n] = 1.0;
+    }
+
+    for (int i = 0; i < n; ++i) {
+        double maxElem = abs(augmented[i][i]);
+        int maxRow = i;
+        for (int k = i + 1; k < n; ++k) {
+            if (abs(augmented[k][i]) > maxElem) {
+                maxElem = abs(augmented[k][i]);
+                maxRow = k;
+            }
+        }
+
+        if (maxElem < numeric_limits<double>::epsilon()) {
+            cerr << "Error: La matriz es singular y no tiene inversa." << endl;
+            return false;
+        }
+
+        swap(augmented[i], augmented[maxRow]);
+
+        double diag = augmented[i][i];
+        for (int j = 0; j < 2 * n; ++j) {
+            augmented[i][j] /= diag;
+        }
+
+        for (int k = 0; k < n; ++k) {
+            if (k != i) {
+                double factor = augmented[k][i];
+                for (int j = 0; j < 2 * n; ++j) {
+                    augmented[k][j] -= factor * augmented[i][j];
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            inverse[i][j] = augmented[i][j + n];
+        }
+    }
+
+    return true;
+}
+
+// Función para imprimir matrices
+void printMatrix(const Matrix& mat) {
+    for (const auto& row : mat) {
+        for (double val : row) {
+            cout << setw(10) << setprecision(4) << fixed << val << " ";
+        }
+        cout << endl;
+    }
+}
+
+// Función principal para calcular el número de condición
+double conditionNumber(const Matrix& mat) {
+    try {
+        cout << "Calculando la matriz inversa...\n";
+        Matrix inverse;
+
+        if (!inverseMatrix(mat, inverse)) {
+            throw runtime_error("La matriz es singular y no tiene inversa.");
+        }
+
+        cout << "Matriz A:\n";
+        printMatrix(mat);
+
+        cout << "\nMatriz Inversa A^-1:\n";
+        printMatrix(inverse);
+
+        double normA = infinityNorm(mat);
+        double normAInv = infinityNorm(inverse);
+
+        cout << "\nNorma de A: " << fixed << setprecision(4) << normA << endl;
+        cout << "Norma de A^-1: " << fixed << setprecision(4) << normAInv << endl;
+
+        double condA = normA * normAInv;
+        cout << "\ncond(A) = Norma de A * Norma de A^-1 = " 
+             << normA << " * " << normAInv << " = " << condA << endl;
+
+        return condA;
+
+    } catch (const runtime_error& e) {
+        cerr << "Error: " << e.what() << endl;
+        return -1;
+    } catch (const exception& e) {
+        cerr << "Error inesperado: " << e.what() << endl;
+        return -1;
+    }
 }
 
 int main() {
-    // Definir una matriz de tamaño 2x2 y un vector de resultados b
-    Matrix A = {{1, 2},
-                {1.1, 2}};
-    
-    Vector b = {10.00, 10.40};
+    //Apartir de Ax=H.  Definir el tamaño de la matriz A y los valores
+    int n = 3; 
+    Matrix A = {
+        {2, -9, 7.1},  
+        {9.01, 3.2, 2.05},
+        {4.2, 18.9, 14.1}
+    };
 
-    cout << "Matriz original A:" << endl;
-    printMatrix(A);
-
-    cout << "\nVector b:" << endl;
-    printVector(b);
-
-    try {
-        // Calcular la inversa de A
-        Matrix A_inv = inverseMatrix(A);
-
-        cout << "\nInversa de A:" << endl;
-        printMatrix(A_inv);
-
-        // Resolver el sistema Ax = b usando la inversa de A
-        Vector x = multiplyMatrixVector(A_inv, b);
-
-        cout << "\nSolución del sistema Ax = b (x):" << endl;
-        printVector(x);
-
-        // Calcular el número de condición
-        double condA = conditionNumber(A);
-        cout << "\nNúmero de condición de A: " << condA << endl;
-
-        // Analizar estabilidad
-        if (condA < 100) {
-            cout << "El sistema es estable." << endl;
-        } else {
-            cout << "El sistema es inestable." << endl;
-        }
-
-    } catch (const exception& e) {
-        cout << "Error: " << e.what() << endl;
+    cout << "Matriz A:" << endl;
+    double condA = conditionNumber(A);
+    if (condA != -1) {
+        cout << "\nEl numero de condicion de la matriz es: " << fixed << setprecision(4) << condA << endl;
     }
+
+    cout <<"\nLa matriz estara bien condicionada si cond(A) = 1 o proximo a 1. (indica estabilidad en los cálculos numericos que involucran esa matriz.)";
+    cout << "\nLa matriz estara mal condicionada si cond(A) es un numero muy grande.\n";
+    cout << "\nUna matriz con valores muy pequenios o cercanos a cero en sus filas o columnas, generalmente estara mal condicionada porque cond(A) tendera a ser muy grande.";
 
     return 0;
 }
